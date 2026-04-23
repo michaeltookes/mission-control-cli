@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
+import { encodePathSegment } from "../utils.js";
 
 const AGENT_STATUSES = new Set(["active", "idle", "offline", "retired"]);
 
@@ -18,7 +19,7 @@ export function registerAgents(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/agents`, {
+        const data = await request(`/api/org/${encodePathSegment(org)}/agents`, {
           query: { role: opts.role, department: opts.department },
         });
         printJson(data, { json: opts.json });
@@ -42,10 +43,13 @@ export function registerAgents(program: Command): void {
           );
         }
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/agents/${opts.id}`, {
+        const data = await request(
+          `/api/org/${encodePathSegment(org)}/agents/${opts.id}`,
+          {
           method: "PATCH",
           body: { status: opts.status },
-        });
+          },
+        );
         printJson(data, { json: opts.json });
       } catch (err) {
         exitWith(err);

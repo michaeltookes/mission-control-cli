@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
-import { stripUndefined } from "../utils.js";
+import { stripUndefined, encodePathSegment } from "../utils.js";
 
 const TASK_PRIORITIES = new Set(["P0", "P1", "P2"]);
 
@@ -28,7 +28,8 @@ export function registerTasks(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/tasks`, {
+        const encodedOrg = encodePathSegment(org);
+        const data = await request(`/api/org/${encodedOrg}/tasks`, {
           query: {
             status: opts.status,
             priority: opts.priority,
@@ -51,7 +52,9 @@ export function registerTasks(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/tasks/${opts.id}`);
+        const encodedOrg = encodePathSegment(org);
+        const encodedId = encodePathSegment(opts.id);
+        const data = await request(`/api/org/${encodedOrg}/tasks/${encodedId}`);
         printJson(data, { json: opts.json });
       } catch (err) {
         exitWith(err);
@@ -74,6 +77,7 @@ export function registerTasks(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
+        const encodedOrg = encodePathSegment(org);
         const body = stripUndefined({
           title: opts.title,
           priority: opts.priority ?? "P2",
@@ -84,7 +88,7 @@ export function registerTasks(program: Command): void {
           deliverable: opts.deliverable,
           projectId: opts.projectId,
         });
-        const data = await request(`/api/org/${org}/tasks`, {
+        const data = await request(`/api/org/${encodedOrg}/tasks`, {
           method: "POST",
           body,
         });
@@ -109,6 +113,8 @@ export function registerTasks(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
+        const encodedOrg = encodePathSegment(org);
+        const encodedId = encodePathSegment(opts.id);
         const body = stripUndefined({
           title: opts.title,
           status: opts.status,
@@ -120,7 +126,7 @@ export function registerTasks(program: Command): void {
         if (Object.keys(body).length === 0) {
           throw new Error("Provide at least one field to update");
         }
-        const data = await request(`/api/org/${org}/tasks/${opts.id}`, {
+        const data = await request(`/api/org/${encodedOrg}/tasks/${encodedId}`, {
           method: "PATCH",
           body,
         });
@@ -140,7 +146,9 @@ export function registerTasks(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/tasks/${opts.id}/claim`, {
+        const encodedOrg = encodePathSegment(org);
+        const encodedId = encodePathSegment(opts.id);
+        const data = await request(`/api/org/${encodedOrg}/tasks/${encodedId}/claim`, {
           method: "POST",
           body: { owner: opts.owner },
         });

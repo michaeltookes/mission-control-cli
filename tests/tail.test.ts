@@ -78,6 +78,25 @@ describe("tail", () => {
     expect(JSON.parse(lines[0]).type).toBe("task.claimed");
   });
 
+  it("excludes typeless events when --filter is active", async () => {
+    const fetchPage = vi.fn(async () => [
+      { id: "1", timestamp: "2026-04-22T10:00:00.000Z" },
+      { id: "2", type: "task.claimed", timestamp: "2026-04-22T10:00:01.000Z" },
+    ]);
+
+    await runTail({
+      org: "coding-lab",
+      interval: 0,
+      filter: new Set(["task.claimed"]),
+      json: true,
+      fetchPage: fetchPage as never,
+      maxIterations: 1,
+    });
+
+    expect(stdoutCalls).toHaveLength(1);
+    expect(JSON.parse(stdoutCalls[0]).id).toBe("2");
+  });
+
   it("advances cursor and dedupe state for filtered-out events", async () => {
     const seenSince: string[] = [];
     const fetchPage = vi.fn(async (_path: string, init?: { query?: { since?: string } }) => {

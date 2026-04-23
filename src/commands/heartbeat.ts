@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
+import { encodePathSegment } from "../utils.js";
 
 export function registerHeartbeat(program: Command): void {
   program
@@ -29,7 +30,7 @@ export function registerHeartbeat(program: Command): void {
           outputTokens: opts.outputTokens,
           idempotencyKey: opts.idempotencyKey,
         };
-        const data = await request(`/api/org/${org}/agents/heartbeat`, {
+        const data = await request(`/api/org/${encodePathSegment(org)}/agents/heartbeat`, {
           method: "POST",
           body,
         });

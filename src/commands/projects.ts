@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
-import { stripUndefined } from "../utils.js";
+import { stripUndefined, encodePathSegment } from "../utils.js";
 
 export function registerProjects(program: Command): void {
   const cmd = program.command("projects").description("Project operations");
@@ -15,7 +15,7 @@ export function registerProjects(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/projects`);
+        const data = await request(`/api/org/${encodePathSegment(org)}/projects`);
         printJson(data, { json: opts.json });
       } catch (err) {
         exitWith(err);
@@ -31,7 +31,7 @@ export function registerProjects(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/projects/${opts.id}`);
+        const data = await request(`/api/org/${encodePathSegment(org)}/projects/${opts.id}`);
         printJson(data, { json: opts.json });
       } catch (err) {
         exitWith(err);
@@ -50,13 +50,14 @@ export function registerProjects(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
+        const encodedOrg = encodePathSegment(org);
         const body = stripUndefined({
           slug: opts.slug,
           name: opts.name,
           description: opts.description,
           parentProjectId: opts.parentProjectId,
         });
-        const data = await request(`/api/org/${org}/projects`, {
+        const data = await request(`/api/org/${encodedOrg}/projects`, {
           method: "POST",
           body,
         });
@@ -79,6 +80,7 @@ export function registerProjects(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
+        const encodedOrg = encodePathSegment(org);
         const body = stripUndefined({
           name: opts.name,
           description: opts.description,
@@ -88,7 +90,7 @@ export function registerProjects(program: Command): void {
         if (Object.keys(body).length === 0) {
           throw new Error("Provide at least one field to update");
         }
-        const data = await request(`/api/org/${org}/projects/${opts.id}`, {
+        const data = await request(`/api/org/${encodedOrg}/projects/${opts.id}`, {
           method: "PATCH",
           body,
         });

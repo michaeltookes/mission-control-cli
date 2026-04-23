@@ -28,12 +28,28 @@ export function loadConfig(): Config {
     const raw = readFileSync(file, "utf8");
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as Config;
+      return sanitizeConfig(parsed as Record<string, unknown>);
     }
     return {};
   } catch {
     return {};
   }
+}
+
+function sanitizeConfig(parsed: Record<string, unknown>): Config {
+  const cfg: Config = {};
+
+  if (typeof parsed["api-url"] === "string") cfg["api-url"] = parsed["api-url"];
+  if (typeof parsed["api-key"] === "string") cfg["api-key"] = parsed["api-key"];
+  if (typeof parsed["default-org"] === "string") cfg["default-org"] = parsed["default-org"];
+  if (
+    typeof parsed["tail-interval"] === "number" &&
+    Number.isFinite(parsed["tail-interval"])
+  ) {
+    cfg["tail-interval"] = parsed["tail-interval"];
+  }
+
+  return cfg;
 }
 
 export function saveConfig(cfg: Config): void {

@@ -73,6 +73,24 @@ describe("config", () => {
     expect(loadConfig()).toEqual({});
   });
 
+  it("drops config entries with invalid types", () => {
+    const file = configPath();
+    writeFileSync(file, JSON.stringify({
+      "api-url": 123,
+      "api-key": "secret",
+      "default-org": false,
+      "tail-interval": 4,
+    }));
+
+    expect(loadConfig()).toEqual({
+      "api-key": "secret",
+      "tail-interval": 4,
+    });
+    expect(resolveApiKey()).toBe("secret");
+    expect(() => resolveApiUrl()).toThrow(ConfigError);
+    expect(() => resolveOrg()).toThrow(ConfigError);
+  });
+
   it("env vars override config", () => {
     setValue("api-url", "https://from-config.example");
     process.env.MC_API_URL = "https://from-env.example";

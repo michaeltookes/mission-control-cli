@@ -7,3 +7,7 @@ export function stripUndefined<T extends Record<string, unknown>>(obj: T): Parti
   }
   return out;
 }
+
+export function encodePathSegment(value: string): string {
+  return encodeURIComponent(value);
+}

@@ -21,5 +21,6 @@ _None yet._
 ## Completed
 
 - CLI hardening pass for startup path resolution, filtered tail cursor advancement, request/config safeguards, CI/doc updates, and supporting test coverage (completed: 2026-04-22).
+- Encode org path segments consistently across CLI API routes, validate loaded config value types, and tighten `tail --filter` handling for typeless events (completed: 2026-04-22).
 
 Resolved items live in [`docs/resolved.md`](./resolved.md).

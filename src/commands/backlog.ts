@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
-import { stripUndefined } from "../utils.js";
+import { stripUndefined, encodePathSegment } from "../utils.js";
 
 const BACKLOG_PRIORITIES = new Set(["P0", "P1", "P2"]);
 
@@ -32,7 +32,7 @@ export function registerBacklog(program: Command): void {
           description: opts.description,
           projectSlug: opts.projectSlug,
         });
-        const data = await request(`/api/org/${org}/backlog`, {
+        const data = await request(`/api/org/${encodePathSegment(org)}/backlog`, {
           method: "POST",
           body,
         });

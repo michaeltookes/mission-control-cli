@@ -3,6 +3,7 @@ import pc from "picocolors";
 import { request, ApiError } from "../client.js";
 import { resolveOrg, loadConfig } from "../config.js";
 import { exitWith } from "../output.js";
+import { encodePathSegment } from "../utils.js";
 
 interface EventRecord {
   id?: string;
@@ -71,7 +72,7 @@ export async function runTail(options: TailOptions): Promise<void> {
     iterations++;
     try {
       const events = await fetchPage<EventRecord[]>(
-        `/api/org/${options.org}/events`,
+        `/api/org/${encodePathSegment(options.org)}/events`,
         { query: { since: cursor, limit: 200 }, signal: options.signal },
       );
       backoffMs = 0;
@@ -101,7 +102,7 @@ export async function runTail(options: TailOptions): Promise<void> {
           }
         }
         if (ev.timestamp && ev.timestamp > cursor) cursor = ev.timestamp;
-        if (options.filter && ev.type && !options.filter.has(ev.type)) continue;
+        if (options.filter && (!ev.type || !options.filter.has(ev.type))) continue;
         emit(ev, options.json);
       }
     } catch (err) {

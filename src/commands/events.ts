@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
+import { encodePathSegment } from "../utils.js";
 
 const MAX_LIMIT = 1000;
 
@@ -19,7 +20,7 @@ export function registerEvents(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/events`, {
+        const data = await request(`/api/org/${encodePathSegment(org)}/events`, {
           query: {
             type: opts.type,
             actor: opts.actor,

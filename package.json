@@ -1,0 +1,56 @@
+{
+  "name": "@michaeltookes/mission-control-cli",
+  "version": "0.1.0",
+  "description": "CLI for Mission Control — agent-facing operations against genkeilabs.dev.",
+  "license": "MIT",
+  "author": "Michael Tookes",
+  "type": "module",
+  "bin": {
+    "mc": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "completions",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "completions": "tsx scripts/build-completions.ts",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm run completions"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaeltookes/mission-control-cli.git"
+  },
+  "homepage": "https://github.com/michaeltookes/mission-control-cli#readme",
+  "bugs": {
+    "url": "https://github.com/michaeltookes/mission-control-cli/issues"
+  },
+  "keywords": [
+    "cli",
+    "mission-control",
+    "agent"
+  ],
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

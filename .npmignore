@@ -1,0 +1,11 @@
+src
+tests
+scripts
+.github
+tsconfig.json
+tsup.config.ts
+.gitignore
+.npmignore
+node_modules
+*.log
+coverage

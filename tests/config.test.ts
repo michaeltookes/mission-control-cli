@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -62,7 +69,7 @@ describe("config", () => {
   it("ignores corrupted JSON", () => {
     saveConfig({ "api-url": "https://example.com" });
     const file = configPath();
-    require("node:fs").writeFileSync(file, "not json");
+    writeFileSync(file, "not json");
     expect(loadConfig()).toEqual({});
   });
 
@@ -90,10 +97,12 @@ describe("config", () => {
   });
 
   it("writes config file with mode 0600", () => {
-    setValue("api-key", "secret");
-    const stat = require("node:fs").statSync(configPath());
+    const file = configPath();
+    writeFileSync(file, "{}", { mode: 0o644 });
+    saveConfig({ "api-key": "secret" });
+    const stat = statSync(file);
     const mode = stat.mode & 0o777;
     expect(mode).toBe(0o600);
-    expect(readFileSync(configPath(), "utf8")).toContain("api-key");
+    expect(readFileSync(file, "utf8")).toContain("api-key");
   });
 });

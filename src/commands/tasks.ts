@@ -2,6 +2,16 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
+import { stripUndefined } from "../utils.js";
+
+const TASK_PRIORITIES = new Set(["P0", "P1", "P2"]);
+
+function parseTaskPriority(value: string): string {
+  if (!TASK_PRIORITIES.has(value)) {
+    throw new Error(`Invalid priority: ${value}. Allowed: P0, P1, P2.`);
+  }
+  return value;
+}
 
 export function registerTasks(program: Command): void {
   const cmd = program.command("tasks").description("Task operations");
@@ -11,7 +21,7 @@ export function registerTasks(program: Command): void {
     .description("List tasks")
     .option("-o, --org <slug>", "Org slug")
     .option("--status <status>", "Filter by status (e.g. in-progress, backlog)")
-    .option("--priority <priority>", "Filter by priority (P0, P1, P2)")
+    .option("--priority <priority>", "Filter by priority (P0, P1, P2)", parseTaskPriority)
     .option("--owner <slug>", "Filter by owner agent slug")
     .option("--project <slug>", "Filter by project slug")
     .option("--json", "Compact JSON output")
@@ -52,7 +62,7 @@ export function registerTasks(program: Command): void {
     .command("create")
     .description("Create a new task")
     .requiredOption("--title <title>", "Task title")
-    .option("--priority <priority>", "P0 | P1 | P2", "P2")
+    .option("--priority <priority>", "P0 | P1 | P2", parseTaskPriority)
     .option("--status <status>", "Initial status")
     .option("--owner <slug>", "Owner agent slug")
     .option("--department <dept>", "Department")
@@ -66,7 +76,7 @@ export function registerTasks(program: Command): void {
         const org = resolveOrg(opts.org);
         const body = stripUndefined({
           title: opts.title,
-          priority: opts.priority,
+          priority: opts.priority ?? "P2",
           status: opts.status,
           owner: opts.owner,
           department: opts.department,
@@ -90,7 +100,7 @@ export function registerTasks(program: Command): void {
     .requiredOption("--id <uuid>", "Task UUID")
     .option("--title <title>")
     .option("--status <status>")
-    .option("--priority <priority>")
+    .option("--priority <priority>", "P0 | P1 | P2", parseTaskPriority)
     .option("--owner <slug>")
     .option("--department <dept>")
     .option("--deliverable <text>")
@@ -139,12 +149,4 @@ export function registerTasks(program: Command): void {
         exitWith(err);
       }
     });
-}
-
-function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const out: Partial<T> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) (out as Record<string, unknown>)[k] = v;
-  }
-  return out;
 }

@@ -2,6 +2,9 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
+import { stripUndefined } from "../utils.js";
+
+const BACKLOG_PRIORITIES = new Set(["P0", "P1", "P2"]);
 
 export function registerBacklog(program: Command): void {
   const cmd = program.command("backlog").description("Backlog operations");
@@ -18,6 +21,9 @@ export function registerBacklog(program: Command): void {
     .option("--json", "Compact JSON output")
     .action(async (opts) => {
       try {
+        if (!BACKLOG_PRIORITIES.has(opts.priority)) {
+          throw new Error(`Invalid priority: ${opts.priority}. Allowed: P0, P1, P2.`);
+        }
         const org = resolveOrg(opts.org);
         const body = stripUndefined({
           title: opts.title,
@@ -35,12 +41,4 @@ export function registerBacklog(program: Command): void {
         exitWith(err);
       }
     });
-}
-
-function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const out: Partial<T> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) (out as Record<string, unknown>)[k] = v;
-  }
-  return out;
 }

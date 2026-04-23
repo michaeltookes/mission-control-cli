@@ -12,7 +12,7 @@ export function registerStatus(program: Command): void {
     .action(async (opts) => {
       try {
         const org = resolveOrg(opts.org);
-        const data = await request(`/api/org/${org}/status`);
+        const data = await request(`/api/org/${encodeURIComponent(org)}/status`);
         printJson(data, { json: opts.json });
       } catch (err) {
         exitWith(err);

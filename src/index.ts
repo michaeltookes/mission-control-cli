@@ -1,4 +1,6 @@
 import { Command } from "commander";
+import { realpathSync } from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { registerHeartbeat } from "./commands/heartbeat.js";
 import { registerStatus } from "./commands/status.js";
@@ -32,9 +34,18 @@ export function createProgram(): Command {
   return program;
 }
 
+function normalizePath(file: string): string {
+  const resolved = path.resolve(file);
+  try {
+    return realpathSync(resolved);
+  } catch {
+    return resolved;
+  }
+}
+
 const isMain =
   process.argv[1] !== undefined &&
-  fileURLToPath(import.meta.url) === process.argv[1];
+  normalizePath(fileURLToPath(import.meta.url)) === normalizePath(process.argv[1]);
 
 if (isMain) {
   const program = createProgram();

@@ -3,6 +3,8 @@ import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
 
+const MAX_LIMIT = 1000;
+
 export function registerEvents(program: Command): void {
   program
     .command("events")
@@ -34,7 +36,12 @@ export function registerEvents(program: Command): void {
 }
 
 function parseLimit(value: string): number {
-  const n = Number.parseInt(value, 10);
-  if (!Number.isFinite(n) || n < 1) throw new Error(`Invalid limit: ${value}`);
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`Invalid limit: ${value}`);
+  }
+  if (n > MAX_LIMIT) {
+    throw new Error(`Invalid limit: ${value}. Maximum allowed is ${MAX_LIMIT}.`);
+  }
   return n;
 }

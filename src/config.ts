@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, chmodSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
@@ -40,6 +40,7 @@ export function saveConfig(cfg: Config): void {
   const file = configPath();
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(file, JSON.stringify(cfg, null, 2) + "\n", { mode: 0o600 });
+  chmodSync(file, 0o600);
 }
 
 export function getValue(key: ConfigKey): string | number | undefined {

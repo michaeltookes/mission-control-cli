@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
+import { stripUndefined } from "../utils.js";
 
 export function registerProjects(program: Command): void {
   const cmd = program.command("projects").description("Project operations");
@@ -96,12 +97,4 @@ export function registerProjects(program: Command): void {
         exitWith(err);
       }
     });
-}
-
-function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const out: Partial<T> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) (out as Record<string, unknown>)[k] = v;
-  }
-  return out;
 }

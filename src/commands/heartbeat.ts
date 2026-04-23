@@ -41,7 +41,9 @@ export function registerHeartbeat(program: Command): void {
 }
 
 function asInt(value: string): number {
-  const n = Number.parseInt(value, 10);
-  if (!Number.isFinite(n)) throw new Error(`Expected integer, got: ${value}`);
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0) {
+    throw new Error(`Expected non-negative integer, got: ${value}`);
+  }
   return n;
 }

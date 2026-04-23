@@ -23,7 +23,7 @@
     "completions": "tsx scripts/build-completions.ts",
     "test": "vitest run",
     "lint": "tsc --noEmit",
-    "prepublishOnly": "pnpm build && pnpm completions"
+    "prepublishOnly": "npm run build && npm run completions"
   },
   "dependencies": {
     "commander": "^12.1.0",

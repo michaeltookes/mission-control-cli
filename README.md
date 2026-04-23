@@ -49,10 +49,13 @@ mc config set default-org coding-lab
 mc config list
 ```
 
-Global flags:
+Common flags:
 
 - `--org <slug>` — overrides config `default-org` and `MC_ORG`
 - `--json` — compact one-line JSON output (default: pretty)
+
+These flags are available on most commands, but not every command. For example,
+`mc completions` does not accept `--org` or `--json`.
 
 Errors go to stderr; exit code 1 on failure.
 

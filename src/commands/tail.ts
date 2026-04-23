@@ -91,7 +91,6 @@ export async function runTail(options: TailOptions): Promise<void> {
       });
 
       for (const ev of fresh) {
-        if (options.filter && ev.type && !options.filter.has(ev.type)) continue;
         const id = ev.id ?? `${ev.timestamp}-${ev.type}`;
         if (id) {
           seen.add(id);
@@ -102,6 +101,7 @@ export async function runTail(options: TailOptions): Promise<void> {
           }
         }
         if (ev.timestamp && ev.timestamp > cursor) cursor = ev.timestamp;
+        if (options.filter && ev.type && !options.filter.has(ev.type)) continue;
         emit(ev, options.json);
       }
     } catch (err) {
@@ -144,7 +144,7 @@ function parseFilter(value: string | undefined): Set<string> | null {
 }
 
 function parseInterval(raw: string): number {
-  const n = Number.parseFloat(raw);
+  const n = Number(raw);
   if (!Number.isFinite(n)) throw new Error(`Invalid interval: ${raw}`);
   return n;
 }

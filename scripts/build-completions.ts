@@ -13,7 +13,6 @@ const program = createProgram();
 interface CmdNode {
   name: string;
   subcommands: string[];
-  options: string[];
 }
 
 function collect(cmd: ReturnType<typeof createProgram>): CmdNode[] {
@@ -21,11 +20,9 @@ function collect(cmd: ReturnType<typeof createProgram>): CmdNode[] {
 
   function walk(c: ReturnType<typeof createProgram>, prefix: string[]): void {
     const sub = c.commands.map((s) => s.name());
-    const opts = c.options.flatMap((o) => o.flags.split(/[\s,]+/).filter((f) => f.startsWith("-")));
     nodes.push({
       name: prefix.length === 0 ? c.name() : prefix.join(" "),
       subcommands: sub,
-      options: opts,
     });
     for (const sc of c.commands) {
       walk(sc, [...prefix, sc.name()]);

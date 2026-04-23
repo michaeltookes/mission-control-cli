@@ -55,10 +55,10 @@ describe("client", () => {
   });
 
   it("throws ApiError when envelope contains an error", async () => {
-    mockFetch(() => jsonResponse({ data: null, error: "Validation failed" }, 400));
+    mockFetch(() => jsonResponse({ data: null, error: "Validation failed" }, 200));
     await expect(request("/api/test")).rejects.toMatchObject({
       name: "ApiError",
-      status: 400,
+      status: 200,
       message: "Validation failed",
     });
   });

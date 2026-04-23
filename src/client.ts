@@ -1,5 +1,7 @@
 import { resolveApiKey, resolveApiUrl } from "./config.js";
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+
 export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   query?: Record<string, string | number | boolean | undefined>;
@@ -55,12 +57,30 @@ export async function request<T = unknown>(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url, {
-    method: options.method ?? "GET",
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-  });
+  const timeoutController = new AbortController();
+  const forwardAbort = () => timeoutController.abort();
+  const timeout = setTimeout(() => timeoutController.abort(), DEFAULT_REQUEST_TIMEOUT_MS);
+
+  if (options.signal) {
+    if (options.signal.aborted) {
+      timeoutController.abort();
+    } else {
+      options.signal.addEventListener("abort", forwardAbort, { once: true });
+    }
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: timeoutController.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", forwardAbort);
+  }
 
   const contentType = res.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");

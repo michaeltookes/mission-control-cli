@@ -3,6 +3,8 @@ import { request } from "../client.js";
 import { resolveOrg } from "../config.js";
 import { printJson, exitWith } from "../output.js";
 
+const AGENT_STATUSES = new Set(["active", "idle", "offline", "retired"]);
+
 export function registerAgents(program: Command): void {
   const cmd = program.command("agents").description("Agent operations");
 
@@ -34,6 +36,11 @@ export function registerAgents(program: Command): void {
     .option("--json", "Compact JSON output")
     .action(async (opts) => {
       try {
+        if (!AGENT_STATUSES.has(opts.status)) {
+          throw new Error(
+            `Invalid agent status: ${opts.status}. Allowed: active, idle, offline, retired.`,
+          );
+        }
         const org = resolveOrg(opts.org);
         const data = await request(`/api/org/${org}/agents/${opts.id}`, {
           method: "PATCH",

@@ -62,6 +62,7 @@ export async function runTail(options: TailOptions): Promise<void> {
   const seenOrder: string[] = [];
 
   let cursor = options.since ?? new Date().toISOString();
+  let cursorMs = parseTimestamp(cursor) ?? Number.NEGATIVE_INFINITY;
   let backoffMs = 0;
   let iterations = 0;
   const limit = options.maxIterations ?? Number.POSITIVE_INFINITY;
@@ -101,12 +102,21 @@ export async function runTail(options: TailOptions): Promise<void> {
             if (drop) seen.delete(drop);
           }
         }
-        if (ev.timestamp && ev.timestamp > cursor) cursor = ev.timestamp;
+        const eventMs = parseTimestamp(ev.timestamp);
+        if (ev.timestamp && eventMs !== undefined && eventMs > cursorMs) {
+          cursor = ev.timestamp;
+          cursorMs = eventMs;
+        }
         if (options.filter && (!ev.type || !options.filter.has(ev.type))) continue;
         emit(ev, options.json);
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
+      if (
+        err instanceof ApiError &&
+        err.status >= 400 &&
+        err.status < 500 &&
+        err.status !== 429
+      ) {
         throw err;
       }
       backoffMs = Math.min(30_000, backoffMs ? backoffMs * 2 : 1_000);
@@ -162,21 +172,31 @@ function configuredInterval(): number | undefined {
   return typeof v === "number" ? v : undefined;
 }
 
+function parseTimestamp(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : undefined;
+}
+
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(new Error("aborted"));
       return;
     }
-    const t = setTimeout(resolve, ms);
-    signal?.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(t);
-        reject(new Error("aborted"));
-      },
-      { once: true },
-    );
+    const cleanup = () => {
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const onAbort = () => {
+      clearTimeout(t);
+      cleanup();
+      reject(new Error("aborted"));
+    };
+    const t = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 }
 

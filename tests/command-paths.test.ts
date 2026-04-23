@@ -28,7 +28,9 @@ vi.mock("../src/output.js", () => ({
   exitWith: exitWithMock,
 }));
 
+const { registerBacklog } = await import("../src/commands/backlog.js");
 const { registerEvents } = await import("../src/commands/events.js");
+const { registerHeartbeat } = await import("../src/commands/heartbeat.js");
 const { registerTasks } = await import("../src/commands/tasks.js");
 
 async function runProgram(register: (program: Command) => void, argv: string[]): Promise<void> {
@@ -60,6 +62,16 @@ describe("command API paths", () => {
         limit: undefined,
       },
     });
+  });
+
+  it("rejects invalid events timestamp flags during parsing", async () => {
+    await expect(runProgram(registerEvents, ["events", "--since", "tomorrowish"])).rejects.toThrow(
+      "Invalid value for --since: tomorrowish",
+    );
+    await expect(runProgram(registerEvents, ["events", "--until", "later"])).rejects.toThrow(
+      "Invalid value for --until: later",
+    );
+    expect(requestMock).not.toHaveBeenCalled();
   });
 
   it("URL-encodes org and id for task requests", async () => {
@@ -117,5 +129,25 @@ describe("command API paths", () => {
         body: { owner: "lucius" },
       },
     );
+  });
+
+  it("rejects invalid backlog priority during parsing", async () => {
+    await expect(
+      runProgram(registerBacklog, ["backlog", "add", "--title", "Investigate", "--priority", "P9"]),
+    ).rejects.toThrow("Invalid priority: P9. Allowed: P0, P1, P2.");
+    expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsafe heartbeat token counts during parsing", async () => {
+    await expect(
+      runProgram(registerHeartbeat, [
+        "heartbeat",
+        "--agent",
+        "lucius",
+        "--context-tokens",
+        "9007199254740992",
+      ]),
+    ).rejects.toThrow("Expected safe non-negative integer, got: 9007199254740992");
+    expect(requestMock).not.toHaveBeenCalled();
   });
 });

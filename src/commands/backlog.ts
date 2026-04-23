@@ -6,6 +6,13 @@ import { stripUndefined, encodePathSegment } from "../utils.js";
 
 const BACKLOG_PRIORITIES = new Set(["P0", "P1", "P2"]);
 
+function parseBacklogPriority(value: string): string {
+  if (!BACKLOG_PRIORITIES.has(value)) {
+    throw new Error(`Invalid priority: ${value}. Allowed: P0, P1, P2.`);
+  }
+  return value;
+}
+
 export function registerBacklog(program: Command): void {
   const cmd = program.command("backlog").description("Backlog operations");
 
@@ -13,7 +20,7 @@ export function registerBacklog(program: Command): void {
     .command("add")
     .description("Add a single backlog item")
     .requiredOption("--title <title>", "Item title")
-    .option("--priority <priority>", "P0 | P1 | P2", "P2")
+    .option("--priority <priority>", "P0 | P1 | P2", parseBacklogPriority, "P2")
     .option("--task-code <code>", "Explicit task code (e.g. TSK-042)")
     .option("--description <text>", "Description / deliverable")
     .option("--project-slug <slug>", "Project slug")
@@ -21,9 +28,6 @@ export function registerBacklog(program: Command): void {
     .option("--json", "Compact JSON output")
     .action(async (opts) => {
       try {
-        if (!BACKLOG_PRIORITIES.has(opts.priority)) {
-          throw new Error(`Invalid priority: ${opts.priority}. Allowed: P0, P1, P2.`);
-        }
         const org = resolveOrg(opts.org);
         const body = stripUndefined({
           title: opts.title,

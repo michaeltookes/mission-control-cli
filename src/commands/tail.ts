@@ -15,6 +15,7 @@ interface EventRecord {
 }
 
 const SEEN_WINDOW = 500;
+const PAGE_LIMIT = 200;
 
 export function registerTail(program: Command): void {
   program
@@ -74,7 +75,7 @@ export async function runTail(options: TailOptions): Promise<void> {
     try {
       const events = await fetchPage<EventRecord[]>(
         `/api/org/${encodePathSegment(options.org)}/events`,
-        { query: { since: cursor, limit: 200 }, signal: options.signal },
+        { query: { since: cursor, limit: PAGE_LIMIT }, signal: options.signal },
       );
       backoffMs = 0;
 
@@ -109,6 +110,11 @@ export async function runTail(options: TailOptions): Promise<void> {
         }
         if (options.filter && (!ev.type || !options.filter.has(ev.type))) continue;
         emit(ev, options.json);
+      }
+
+      if (shouldAdvancePastTimestamp(events, cursorMs)) {
+        cursorMs += 1;
+        cursor = new Date(cursorMs).toISOString();
       }
     } catch (err) {
       if (
@@ -176,6 +182,24 @@ function parseTimestamp(value: string | undefined): number | undefined {
   if (!value) return undefined;
   const ms = Date.parse(value);
   return Number.isFinite(ms) ? ms : undefined;
+}
+
+function shouldAdvancePastTimestamp(
+  events: EventRecord[],
+  cursorMs: number,
+): boolean {
+  if (!Array.isArray(events) || events.length < PAGE_LIMIT) {
+    return false;
+  }
+
+  const maxTimestampMs = events.reduce<number | undefined>((max, ev) => {
+    const eventMs = parseTimestamp(ev.timestamp);
+    if (eventMs === undefined) return max;
+    if (max === undefined || eventMs > max) return eventMs;
+    return max;
+  }, undefined);
+
+  return maxTimestampMs !== undefined && maxTimestampMs <= cursorMs;
 }
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {

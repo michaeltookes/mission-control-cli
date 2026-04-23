@@ -5,9 +5,14 @@ import { printJson, exitWith } from "../output.js";
 import { encodePathSegment } from "../utils.js";
 
 const MAX_LIMIT = 1000;
+const ISO_TIMESTAMP_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 function parseIsoTimestamp(flag: "--since" | "--until") {
   return (value: string): string => {
+    if (!ISO_TIMESTAMP_RE.test(value)) {
+      throw new Error(`Invalid value for ${flag}: ${value}`);
+    }
     const ms = Date.parse(value);
     if (!Number.isFinite(ms)) {
       throw new Error(`Invalid value for ${flag}: ${value}`);

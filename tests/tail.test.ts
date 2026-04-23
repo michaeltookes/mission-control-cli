@@ -177,6 +177,50 @@ describe("tail", () => {
     ]);
   });
 
+  it("advances past a saturated equal-timestamp page to avoid starvation", async () => {
+    const seenSince: string[] = [];
+    const repeatedPage = Array.from({ length: 200 }, (_, index) => ({
+      id: `same-${index}`,
+      type: "task.updated",
+      timestamp: "2026-04-22T10:00:00.000Z",
+    }));
+    const nextPage = [
+      {
+        id: "newer-1",
+        type: "task.claimed",
+        timestamp: "2026-04-22T10:00:01.000Z",
+      },
+    ];
+
+    const fetchPage = vi.fn(async (_path: string, init?: { query?: { since?: string } }) => {
+      const since = init?.query?.since ?? "";
+      seenSince.push(since);
+      if (since === "2026-04-22T10:00:00.000Z") {
+        return repeatedPage;
+      }
+      if (since === "2026-04-22T10:00:00.001Z") {
+        return nextPage;
+      }
+      return [];
+    });
+
+    await runTail({
+      org: "coding-lab",
+      interval: 0,
+      filter: null,
+      since: "2026-04-22T10:00:00.000Z",
+      json: true,
+      fetchPage: fetchPage as never,
+      maxIterations: 2,
+    });
+
+    expect(seenSince).toEqual([
+      "2026-04-22T10:00:00.000Z",
+      "2026-04-22T10:00:00.001Z",
+    ]);
+    expect(stdoutCalls.some((line) => JSON.parse(line).id === "newer-1")).toBe(true);
+  });
+
   it("rethrows non-rate-limited 4xx API errors without retrying", async () => {
     const fetchPage = vi.fn(async () => {
       throw new ApiError("Forbidden", 403);

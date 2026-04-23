@@ -71,7 +71,43 @@ describe("command API paths", () => {
     await expect(runProgram(registerEvents, ["events", "--until", "later"])).rejects.toThrow(
       "Invalid value for --until: later",
     );
+    await expect(
+      runProgram(registerEvents, ["events", "--since", "2026-04-22 10:00:00Z"]),
+    ).rejects.toThrow("Invalid value for --since: 2026-04-22 10:00:00Z");
     expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  it("enforces events limit boundaries during parsing", async () => {
+    await expect(runProgram(registerEvents, ["events", "--limit", "0"])).rejects.toThrow(
+      "Invalid limit: 0",
+    );
+    await expect(runProgram(registerEvents, ["events", "--limit", "1001"])).rejects.toThrow(
+      "Invalid limit: 1001. Maximum allowed is 1000.",
+    );
+
+    requestMock.mockClear();
+    await expect(runProgram(registerEvents, ["events", "--limit", "1"])).resolves.toBeUndefined();
+    expect(requestMock).toHaveBeenCalledWith("/api/org/acme%2Fdivision%3Fwest%231/events", {
+      query: {
+        type: undefined,
+        actor: undefined,
+        since: undefined,
+        until: undefined,
+        limit: 1,
+      },
+    });
+
+    requestMock.mockClear();
+    await expect(runProgram(registerEvents, ["events", "--limit", "1000"])).resolves.toBeUndefined();
+    expect(requestMock).toHaveBeenCalledWith("/api/org/acme%2Fdivision%3Fwest%231/events", {
+      query: {
+        type: undefined,
+        actor: undefined,
+        since: undefined,
+        until: undefined,
+        limit: 1000,
+      },
+    });
   });
 
   it("URL-encodes org and id for task requests", async () => {

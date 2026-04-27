@@ -21,6 +21,7 @@ export function registerHeartbeat(program: Command): void {
       try {
         const org = resolveOrg(opts.org);
         const body = {
+          schemaVersion: "1.0" as const,
           agentId: opts.agent,
           timestamp: new Date().toISOString(),
           sessionId: opts.sessionId,

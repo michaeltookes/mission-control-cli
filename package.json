@@ -1,6 +1,6 @@
 {
   "name": "@michaeltookes/mission-control-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI for Mission Control — agent-facing operations against genkeilabs.dev.",
   "license": "MIT",
   "author": "Michael Tookes",

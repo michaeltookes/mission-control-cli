@@ -4,7 +4,8 @@ Prioritized list of planned features, improvements, and technical debt for `@mic
 
 ## High Priority
 
-_None yet._
+1. **Add Mission Control backlog sync workflow**
+   Add `.github/workflows/sync-backlog.yml` so this repo's `docs/backlog.md` syncs to Mission Control on every push to `main` (and via manual `workflow_dispatch`). Copy the canonical template and instructions from the Mission Control repo at `docs/backlog-sync-workflow.md`. Set `PROJECT_SLUG` to this repo's project slug in Mission Control and add the `INGEST_API_KEY` repo secret (key will be provided separately).
 
 ## Medium Priority
 
